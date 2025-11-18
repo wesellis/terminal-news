@@ -13,8 +13,8 @@ Go-based REST API server for Terminal News.
 - ✅ All API route stubs
 
 ### To Implement:
-- ⏳ Articles API endpoints
-- ⏳ Voting system
+- ✅ Articles API endpoints
+- ✅ Voting system
 - ⏳ Comments system
 - ⏳ Classifieds CRUD
 - ⏳ Weather API integration
@@ -60,21 +60,21 @@ Server will start on http://localhost:8080
 - `POST /api/v1/auth/login` - Login user ✅
 - `POST /api/v1/auth/refresh` - Refresh access token ✅
 
-### Articles (Not Yet Implemented)
-- `GET /api/v1/articles` - List articles
-- `GET /api/v1/articles/hot` - Hot feed
-- `GET /api/v1/articles/controversial` - Controversial feed
-- `GET /api/v1/articles/rising` - Rising feed
-- `GET /api/v1/articles/{id}` - Get article
+### Articles
+- `GET /api/v1/articles` - List articles (with optional ?feed=hot/controversial/rising) ✅
+- `GET /api/v1/articles/hot` - Hot feed ✅
+- `GET /api/v1/articles/controversial` - Controversial feed ✅
+- `GET /api/v1/articles/rising` - Rising feed ✅
+- `GET /api/v1/articles/{id}` - Get article ✅
 
 ### User (Partially Implemented)
 - `GET /api/v1/user/profile` - Get current user profile ✅
 - `PUT /api/v1/user/profile` - Update profile (stub)
 - `GET /api/v1/user/activity` - Get user activity (stub)
 
-### Voting (Not Yet Implemented)
-- `POST /api/v1/articles/{id}/vote` - Vote on article
-- `DELETE /api/v1/articles/{id}/vote` - Remove vote
+### Voting
+- `POST /api/v1/articles/{id}/vote` - Vote on article ✅
+- `DELETE /api/v1/articles/{id}/vote` - Remove vote ✅
 
 ### Comments (Not Yet Implemented)
 - `GET /api/v1/articles/{id}/comments` - Get comments
@@ -118,6 +118,43 @@ curl http://localhost:8080/api/v1/user/profile \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
+### Get Hot Articles
+```bash
+curl http://localhost:8080/api/v1/articles/hot?limit=10&offset=0
+```
+
+### Get Article by ID
+```bash
+curl http://localhost:8080/api/v1/articles/1
+```
+
+### Vote on Article (requires token)
+```bash
+# Vote with "like"
+curl -X POST http://localhost:8080/api/v1/articles/1/vote \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vote_type": "like"}'
+
+# Vote with "open" (tracking article opens)
+curl -X POST http://localhost:8080/api/v1/articles/1/vote \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vote_type": "open"}'
+
+# Vote with "dislike"
+curl -X POST http://localhost:8080/api/v1/articles/1/vote \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vote_type": "dislike"}'
+```
+
+### Remove Vote (requires token)
+```bash
+curl -X DELETE "http://localhost:8080/api/v1/articles/1/vote?vote_type=like" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
 ## Project Structure
 
 ```
@@ -129,8 +166,8 @@ backend/
 │   ├── api/
 │   │   ├── handlers/            # HTTP handlers
 │   │   │   ├── auth.go         # ✅ Implemented
-│   │   │   ├── articles.go     # Stub
-│   │   │   ├── votes.go        # Stub
+│   │   │   ├── articles.go     # ✅ Implemented
+│   │   │   ├── votes.go        # ✅ Implemented
 │   │   │   ├── comments.go     # Stub
 │   │   │   ├── classifieds.go  # Stub
 │   │   │   ├── weather.go      # Stub
@@ -142,8 +179,8 @@ backend/
 │   │   └── db.go                # ✅ Implemented
 │   └── services/
 │       ├── auth.go              # ✅ Implemented
-│       ├── articles.go          # Stub
-│       ├── votes.go             # Stub
+│       ├── articles.go          # ✅ Implemented
+│       ├── votes.go             # ✅ Implemented
 │       ├── comments.go          # Stub
 │       ├── classifieds.go       # Stub
 │       ├── payments.go          # Stub
@@ -183,9 +220,9 @@ golangci-lint run
 ## Next Steps (Dev 1 Tasks)
 
 ### Week 1-2: Core Features
-1. Implement articles API endpoints
-2. Implement voting system
-3. Add Redis caching for rankings
+1. ✅ Implement articles API endpoints
+2. ✅ Implement voting system
+3. ✅ Add Redis caching for rankings
 4. Complete user profile endpoints
 
 ### Week 3-4: Extended Features
@@ -209,10 +246,14 @@ golangci-lint run
 
 **For Dev 2 (CLI):**
 - Auth endpoints are READY to use ✅
+- Articles endpoints are READY to use ✅
+- Voting endpoints are READY to use ✅
 - Test credentials can be created via register endpoint
 - Access token expires in 15 minutes
 - Refresh token expires in 7 days
 - Include `Authorization: Bearer <token>` header for protected endpoints
+- All article feeds include Redis caching (5min for hot/controversial, 3min for rising)
+- Voting automatically invalidates article caches for real-time ranking updates
 
 **For Dev 3 (Scraper):**
 - Database schema is ready
@@ -244,5 +285,5 @@ Critical ones:
 
 ---
 
-**Status:** Foundation complete, ready for feature implementation
-**Next:** Implement articles API endpoints
+**Status:** Core features implemented (Auth + Articles + Voting)
+**Next:** Implement comments system and classifieds CRUD
