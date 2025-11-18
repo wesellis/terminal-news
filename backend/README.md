@@ -18,8 +18,8 @@ Go-based REST API server for Terminal News.
 - ✅ Comments system
 - ✅ WebSocket real-time updates
 - ✅ Background jobs/scheduler
-- ⏳ Classifieds CRUD
-- ⏳ Weather API integration
+- ✅ Classifieds CRUD
+- ✅ Weather API integration
 - ⏳ Stripe payments
 
 ## Quick Start
@@ -82,12 +82,13 @@ Server will start on http://localhost:8080
 - `PUT /api/v1/comments/{id}` - Update comment ✅
 - `DELETE /api/v1/comments/{id}` - Delete comment (soft delete) ✅
 
-### Classifieds (Not Yet Implemented)
-- `GET /api/v1/classifieds` - List classifieds
-- `GET /api/v1/classifieds/{id}` - Get classified
-- `POST /api/v1/classifieds` - Create classified
-- `PUT /api/v1/classifieds/{id}` - Update classified
-- `DELETE /api/v1/classifieds/{id}` - Delete classified
+### Classifieds
+- `GET /api/v1/classifieds` - List classifieds (filter by category/city/state) ✅
+- `GET /api/v1/classifieds?lat=...&lng=...&radius=...` - Geographic search ✅
+- `GET /api/v1/classifieds/{id}` - Get classified ✅
+- `POST /api/v1/classifieds` - Create classified ✅
+- `PUT /api/v1/classifieds/{id}` - Update classified ✅
+- `DELETE /api/v1/classifieds/{id}` - Delete classified ✅
 
 ## Testing Auth Endpoints
 
@@ -198,6 +199,46 @@ wscat -c ws://localhost:8080/ws
 wscat -c "ws://localhost:8080/ws?token=YOUR_ACCESS_TOKEN"
 ```
 
+### Create Classified (requires token)
+```bash
+curl -X POST http://localhost:8080/api/v1/classifieds \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Vintage bicycle for sale",
+    "description": "Classic 1970s Schwinn in excellent condition",
+    "price": 250.00,
+    "category": "for-sale",
+    "subcategory": "bicycles",
+    "city": "Portland",
+    "state": "OR",
+    "country": "US",
+    "lat": 45.5152,
+    "lng": -122.6784,
+    "contact_email": "seller@example.com",
+    "contact_method": "email",
+    "expires_in_days": 30
+  }'
+```
+
+### Search Classifieds by Location
+```bash
+# Find classifieds within 25 miles of coordinates
+curl "http://localhost:8080/api/v1/classifieds?lat=45.5152&lng=-122.6784&radius=25"
+
+# Filter by category
+curl "http://localhost:8080/api/v1/classifieds?category=for-sale"
+
+# Filter by city
+curl "http://localhost:8080/api/v1/classifieds?city=Portland&state=OR"
+```
+
+### Get Weather
+```bash
+# Get weather for Portland, OR
+curl "http://localhost:8080/api/v1/weather?lat=45.5152&lng=-122.6784"
+```
+
 ## Project Structure
 
 ```
@@ -212,8 +253,8 @@ backend/
 │   │   │   ├── articles.go     # ✅ Implemented
 │   │   │   ├── votes.go        # ✅ Implemented
 │   │   │   ├── comments.go     # ✅ Implemented
-│   │   │   ├── classifieds.go  # Stub
-│   │   │   ├── weather.go      # Stub
+│   │   │   ├── classifieds.go  # ✅ Implemented
+│   │   │   ├── weather.go      # ✅ Implemented
 │   │   │   ├── payments.go     # Stub
 │   │   │   └── websocket.go    # ✅ Implemented
 │   │   └── middleware/
@@ -225,8 +266,10 @@ backend/
 │   │   ├── articles.go          # ✅ Implemented
 │   │   ├── votes.go             # ✅ Implemented
 │   │   ├── comments.go          # ✅ Implemented
-│   │   ├── classifieds.go       # Stub
+│   │   ├── classifieds.go       # ✅ Implemented
 │   │   └── payments.go          # Stub
+│   ├── external/
+│   │   └── weather.go           # ✅ Implemented (NOAA API)
 │   └── workers/
 │       └── scheduler.go         # ✅ Implemented
 ├── pkg/
@@ -275,11 +318,12 @@ golangci-lint run
 5. ✅ Implement WebSocket real-time updates
 6. ✅ Implement background scheduler
 
-### Week 3-4: Extended Features
-1. Complete user profile update endpoints
-2. Implement classifieds CRUD
-3. Add full-text search
-4. Add rate limiting middleware
+### Week 3-4: Extended Features ✅ COMPLETE
+1. ✅ Implement classifieds CRUD with geographic search
+2. ✅ Weather API integration (NOAA)
+3. Complete user profile update endpoints
+4. Add full-text search
+5. Add rate limiting middleware
 
 ### Week 5-6: Payments
 9. Stripe integration
@@ -299,12 +343,16 @@ golangci-lint run
 - ✅ Articles endpoints (hot/controversial/rising feeds with Redis caching)
 - ✅ Voting endpoints (track opens, likes, dislikes)
 - ✅ Comments endpoints (create, read, update, delete with tree structure)
+- ✅ Classifieds endpoints (full CRUD with geographic search)
+- ✅ Weather endpoint (NOAA integration for local weather)
 - ✅ WebSocket endpoint for real-time updates
 - ✅ User activity endpoint (view comment/vote history)
 - Access token expires in 15 minutes, refresh token expires in 7 days
 - Include `Authorization: Bearer <token>` header for protected endpoints
 - Redis caching: 5min for hot/controversial, 3min for rising, 10min for individual articles
 - Background scheduler refreshes rankings every 5 minutes automatically
+- Classifieds auto-expire after 30 days (configurable)
+- Geographic search uses Haversine formula for radius-based queries
 
 **For Dev 3 (Scraper):**
 - Database schema is ready
@@ -336,6 +384,7 @@ Critical ones:
 
 ---
 
-**Status:** Week 1-2 complete! Full core functionality ready for CLI integration
-**Implemented:** Auth, Articles, Voting, Comments, WebSocket, Background Jobs
-**Next:** Classifieds CRUD, Weather API, Stripe payments
+**Status:** Week 1-4 complete! Full featured backend ready for CLI integration
+**Implemented:** Auth, Articles, Voting, Comments, Classifieds (with geo-search), Weather (NOAA), WebSocket, Background Jobs
+**Next:** Stripe payments, rate limiting, full-text search
+**Note:** Weather, classifieds, and local news are all location-aware using lat/lng coordinates

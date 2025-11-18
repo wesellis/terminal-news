@@ -803,11 +803,12 @@ jobs:
 - [x] Redis caching layer setup
 - [x] WebSocket server running
 
-### Week 3-4 Goals
+### Week 3-4 Goals ✅ COMPLETE
 - [x] Ranking algorithms implemented (Hot, Controversial, Rising)
 - [x] Materialized views refreshing (background scheduler every 5 min)
-- [ ] Full classifieds CRUD
-- [ ] Geographic search working
+- [x] Full classifieds CRUD
+- [x] Geographic search working (Haversine formula)
+- [x] Weather API integration (NOAA)
 - [ ] Rate limiting active
 - [ ] Security middleware complete
 
