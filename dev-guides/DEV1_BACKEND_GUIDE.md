@@ -795,16 +795,17 @@ jobs:
 ## 📋 DAILY CHECKLIST
 
 ### Week 1-2 Goals
-- [ ] Database connected and migrations running
-- [ ] User registration/login working
-- [ ] Basic CRUD for articles, votes, comments
-- [ ] JWT authentication implemented
-- [ ] Redis caching layer setup
+- [x] Database connected and migrations running
+- [x] User registration/login working
+- [x] Basic CRUD for articles, votes (✅ COMPLETE)
+- [ ] Basic CRUD for comments
+- [x] JWT authentication implemented
+- [x] Redis caching layer setup
 - [ ] WebSocket server running
 
 ### Week 3-4 Goals
-- [ ] Ranking algorithms implemented
-- [ ] Materialized views refreshing
+- [x] Ranking algorithms implemented (Hot, Controversial, Rising)
+- [ ] Materialized views refreshing (need background job)
 - [ ] Full classifieds CRUD
 - [ ] Geographic search working
 - [ ] Rate limiting active
