@@ -19,6 +19,8 @@ import (
 	apimiddleware "github.com/wesellis/terminal-news/backend/internal/api/middleware"
 	"github.com/wesellis/terminal-news/backend/internal/database"
 	"github.com/wesellis/terminal-news/backend/internal/services"
+	"github.com/wesellis/terminal-news/backend/internal/workers"
+	"github.com/wesellis/terminal-news/backend/pkg/websocket"
 )
 
 func main() {
@@ -40,6 +42,11 @@ func main() {
 
 	log.Println("✅ Database and Redis connected")
 
+	// Initialize WebSocket hub
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+	log.Println("✅ WebSocket hub running")
+
 	// Initialize services
 	authService := services.NewAuthService(db)
 	articleService := services.NewArticleService(db, rdb)
@@ -56,6 +63,7 @@ func main() {
 		commentService,
 		classifiedService,
 		paymentService,
+		wsHub,
 	)
 
 	// Setup router
@@ -148,8 +156,9 @@ func main() {
 	r.Get("/ws", h.HandleWebSocket)
 
 	// Start background workers
-	scheduler := services.NewScheduler(db, rdb)
-	go scheduler.Start(context.Background())
+	scheduler := workers.NewScheduler(db, rdb)
+	ctx := context.Background()
+	go scheduler.Start(ctx)
 
 	port := os.Getenv("PORT")
 	if port == "" {

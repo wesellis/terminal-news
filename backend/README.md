@@ -15,12 +15,12 @@ Go-based REST API server for Terminal News.
 ### To Implement:
 - ✅ Articles API endpoints
 - ✅ Voting system
-- ⏳ Comments system
+- ✅ Comments system
+- ✅ WebSocket real-time updates
+- ✅ Background jobs/scheduler
 - ⏳ Classifieds CRUD
 - ⏳ Weather API integration
 - ⏳ Stripe payments
-- ⏳ WebSocket real-time updates
-- ⏳ Background jobs/scheduler
 
 ## Quick Start
 
@@ -76,11 +76,11 @@ Server will start on http://localhost:8080
 - `POST /api/v1/articles/{id}/vote` - Vote on article ✅
 - `DELETE /api/v1/articles/{id}/vote` - Remove vote ✅
 
-### Comments (Not Yet Implemented)
-- `GET /api/v1/articles/{id}/comments` - Get comments
-- `POST /api/v1/articles/{id}/comments` - Post comment
-- `PUT /api/v1/comments/{id}` - Update comment
-- `DELETE /api/v1/comments/{id}` - Delete comment
+### Comments
+- `GET /api/v1/articles/{id}/comments` - Get comments in tree structure ✅
+- `POST /api/v1/articles/{id}/comments` - Post comment (supports nested replies) ✅
+- `PUT /api/v1/comments/{id}` - Update comment ✅
+- `DELETE /api/v1/comments/{id}` - Delete comment (soft delete) ✅
 
 ### Classifieds (Not Yet Implemented)
 - `GET /api/v1/classifieds` - List classifieds
@@ -155,6 +155,49 @@ curl -X DELETE "http://localhost:8080/api/v1/articles/1/vote?vote_type=like" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
+### Get Comments for Article
+```bash
+curl http://localhost:8080/api/v1/articles/1/comments
+```
+
+### Post Comment (requires token)
+```bash
+# Top-level comment
+curl -X POST http://localhost:8080/api/v1/articles/1/comments \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Great article!"}'
+
+# Reply to comment
+curl -X POST http://localhost:8080/api/v1/articles/1/comments \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "I agree!", "parent_id": 5}'
+```
+
+### Update Comment (requires token)
+```bash
+curl -X PUT http://localhost:8080/api/v1/comments/5 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Updated comment text"}'
+```
+
+### Delete Comment (requires token)
+```bash
+curl -X DELETE http://localhost:8080/api/v1/comments/5 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Connect to WebSocket
+```bash
+# Using wscat (npm install -g wscat)
+wscat -c ws://localhost:8080/ws
+
+# With authentication token
+wscat -c "ws://localhost:8080/ws?token=YOUR_ACCESS_TOKEN"
+```
+
 ## Project Structure
 
 ```
@@ -168,23 +211,28 @@ backend/
 │   │   │   ├── auth.go         # ✅ Implemented
 │   │   │   ├── articles.go     # ✅ Implemented
 │   │   │   ├── votes.go        # ✅ Implemented
-│   │   │   ├── comments.go     # Stub
+│   │   │   ├── comments.go     # ✅ Implemented
 │   │   │   ├── classifieds.go  # Stub
 │   │   │   ├── weather.go      # Stub
 │   │   │   ├── payments.go     # Stub
-│   │   │   └── websocket.go    # Stub
+│   │   │   └── websocket.go    # ✅ Implemented
 │   │   └── middleware/
 │   │       └── auth.go          # ✅ Implemented
 │   ├── database/
 │   │   └── db.go                # ✅ Implemented
-│   └── services/
-│       ├── auth.go              # ✅ Implemented
-│       ├── articles.go          # ✅ Implemented
-│       ├── votes.go             # ✅ Implemented
-│       ├── comments.go          # Stub
-│       ├── classifieds.go       # Stub
-│       ├── payments.go          # Stub
-│       └── scheduler.go         # Stub
+│   ├── services/
+│   │   ├── auth.go              # ✅ Implemented
+│   │   ├── articles.go          # ✅ Implemented
+│   │   ├── votes.go             # ✅ Implemented
+│   │   ├── comments.go          # ✅ Implemented
+│   │   ├── classifieds.go       # Stub
+│   │   └── payments.go          # Stub
+│   └── workers/
+│       └── scheduler.go         # ✅ Implemented
+├── pkg/
+│   └── websocket/
+│       ├── hub.go               # ✅ Implemented
+│       └── client.go            # ✅ Implemented
 ├── go.mod
 ├── go.sum
 ├── .env.example
@@ -219,17 +267,19 @@ golangci-lint run
 
 ## Next Steps (Dev 1 Tasks)
 
-### Week 1-2: Core Features
+### Week 1-2: Core Features ✅ COMPLETE
 1. ✅ Implement articles API endpoints
 2. ✅ Implement voting system
 3. ✅ Add Redis caching for rankings
-4. Complete user profile endpoints
+4. ✅ Implement comments system
+5. ✅ Implement WebSocket real-time updates
+6. ✅ Implement background scheduler
 
 ### Week 3-4: Extended Features
-5. Implement comments system
-6. Implement classifieds CRUD
-7. Add full-text search
-8. Implement ranking algorithms
+1. Complete user profile update endpoints
+2. Implement classifieds CRUD
+3. Add full-text search
+4. Add rate limiting middleware
 
 ### Week 5-6: Payments
 9. Stripe integration
@@ -245,15 +295,16 @@ golangci-lint run
 ## Notes for Other Devs
 
 **For Dev 2 (CLI):**
-- Auth endpoints are READY to use ✅
-- Articles endpoints are READY to use ✅
-- Voting endpoints are READY to use ✅
-- Test credentials can be created via register endpoint
-- Access token expires in 15 minutes
-- Refresh token expires in 7 days
+- ✅ Auth endpoints (register, login, refresh token)
+- ✅ Articles endpoints (hot/controversial/rising feeds with Redis caching)
+- ✅ Voting endpoints (track opens, likes, dislikes)
+- ✅ Comments endpoints (create, read, update, delete with tree structure)
+- ✅ WebSocket endpoint for real-time updates
+- ✅ User activity endpoint (view comment/vote history)
+- Access token expires in 15 minutes, refresh token expires in 7 days
 - Include `Authorization: Bearer <token>` header for protected endpoints
-- All article feeds include Redis caching (5min for hot/controversial, 3min for rising)
-- Voting automatically invalidates article caches for real-time ranking updates
+- Redis caching: 5min for hot/controversial, 3min for rising, 10min for individual articles
+- Background scheduler refreshes rankings every 5 minutes automatically
 
 **For Dev 3 (Scraper):**
 - Database schema is ready
@@ -285,5 +336,6 @@ Critical ones:
 
 ---
 
-**Status:** Core features implemented (Auth + Articles + Voting)
-**Next:** Implement comments system and classifieds CRUD
+**Status:** Week 1-2 complete! Full core functionality ready for CLI integration
+**Implemented:** Auth, Articles, Voting, Comments, WebSocket, Background Jobs
+**Next:** Classifieds CRUD, Weather API, Stripe payments

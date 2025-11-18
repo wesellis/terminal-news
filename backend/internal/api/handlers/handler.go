@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/wesellis/terminal-news/backend/internal/services"
+	"github.com/wesellis/terminal-news/backend/pkg/websocket"
 )
 
 type Handler struct {
@@ -15,6 +16,7 @@ type Handler struct {
 	commentService    *services.CommentService
 	classifiedService *services.ClassifiedService
 	paymentService    *services.PaymentService
+	wsHub             *websocket.Hub
 }
 
 func NewHandler(
@@ -24,6 +26,7 @@ func NewHandler(
 	commentService *services.CommentService,
 	classifiedService *services.ClassifiedService,
 	paymentService *services.PaymentService,
+	wsHub *websocket.Hub,
 ) *Handler {
 	return &Handler{
 		authService:       authService,
@@ -32,6 +35,7 @@ func NewHandler(
 		commentService:    commentService,
 		classifiedService: classifiedService,
 		paymentService:    paymentService,
+		wsHub:             wsHub,
 	}
 }
 
