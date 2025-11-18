@@ -22,7 +22,7 @@ Go-based REST API server for Terminal News.
 - ✅ Weather API integration
 - ✅ Rate limiting
 - ✅ Security middleware
-- ⏳ Stripe payments
+- ✅ Stripe payments
 
 ## Quick Start
 
@@ -241,6 +241,72 @@ curl "http://localhost:8080/api/v1/classifieds?city=Portland&state=OR"
 curl "http://localhost:8080/api/v1/weather?lat=45.5152&lng=-122.6784"
 ```
 
+### Create Payment Intent for Classified Boost (requires token)
+```bash
+# Boost classified for 7 days ($5.00)
+curl -X POST http://localhost:8080/api/v1/payments/create-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "classified_boost",
+    "classified_id": 123,
+    "duration_days": 7
+  }'
+
+# Boost classified for 30 days ($10.00)
+curl -X POST http://localhost:8080/api/v1/payments/create-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "classified_boost",
+    "classified_id": 123,
+    "duration_days": 30
+  }'
+```
+
+### Create Sponsor Subscription (requires token)
+```bash
+# Bronze sponsor ($9.99/month)
+curl -X POST http://localhost:8080/api/v1/payments/create-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sponsor_subscription",
+    "tier": "bronze"
+  }'
+
+# Silver sponsor ($29.99/month)
+curl -X POST http://localhost:8080/api/v1/payments/create-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sponsor_subscription",
+    "tier": "silver"
+  }'
+
+# Gold sponsor ($99.99/month)
+curl -X POST http://localhost:8080/api/v1/payments/create-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sponsor_subscription",
+    "tier": "gold"
+  }'
+```
+
+### Get Payment History (requires token)
+```bash
+curl http://localhost:8080/api/v1/payments/history \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Setup Stripe Products (admin only, one-time use)
+```bash
+# This creates products and prices in Stripe dashboard
+curl -X POST http://localhost:8080/api/v1/admin/setup-stripe \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
 ## Project Structure
 
 ```
@@ -257,7 +323,7 @@ backend/
 │   │   │   ├── comments.go     # ✅ Implemented
 │   │   │   ├── classifieds.go  # ✅ Implemented
 │   │   │   ├── weather.go      # ✅ Implemented
-│   │   │   ├── payments.go     # Stub
+│   │   │   ├── payments.go     # ✅ Implemented (Stripe integration)
 │   │   │   └── websocket.go    # ✅ Implemented
 │   │   └── middleware/
 │   │       └── auth.go          # ✅ Implemented
@@ -269,7 +335,7 @@ backend/
 │   │   ├── votes.go             # ✅ Implemented
 │   │   ├── comments.go          # ✅ Implemented
 │   │   ├── classifieds.go       # ✅ Implemented
-│   │   └── payments.go          # Stub
+│   │   └── payments.go          # ✅ Implemented (Stripe integration)
 │   ├── external/
 │   │   └── weather.go           # ✅ Implemented (NOAA API)
 │   └── workers/
@@ -420,7 +486,7 @@ Critical ones:
 
 ---
 
-**Status:** Week 1-4 complete! Full featured backend ready for CLI integration
-**Implemented:** Auth, Articles, Voting, Comments, Classifieds (with geo-search), Weather (NOAA), WebSocket, Background Jobs
-**Next:** Stripe payments, rate limiting, full-text search
+**Status:** Week 1-6 complete! Full featured backend with payments ready for CLI integration
+**Implemented:** Auth, Articles, Voting, Comments, Classifieds (with geo-search), Weather (NOAA), WebSocket, Background Jobs, Stripe Payments, Rate Limiting, Security Middleware
+**Next:** Full-text search, comprehensive testing, monitoring
 **Note:** Weather, classifieds, and local news are all location-aware using lat/lng coordinates

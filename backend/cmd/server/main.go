@@ -155,9 +155,12 @@ func main() {
 			r.Delete("/classifieds/{id}", h.HandleDeleteClassified)
 			r.Post("/classifieds/{id}/boost", h.HandleBoostClassified)
 
-			// Payments
+				// Payments
 			r.Post("/payments/create-intent", h.HandleCreatePaymentIntent)
 			r.Get("/payments/history", h.HandleGetPaymentHistory)
+
+			// Admin only - setup Stripe products (one-time use)
+			r.Post("/admin/setup-stripe", h.HandleSetupStripeProducts)
 		})
 	})
 
