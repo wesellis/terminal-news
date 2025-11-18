@@ -20,6 +20,8 @@ Go-based REST API server for Terminal News.
 - ✅ Background jobs/scheduler
 - ✅ Classifieds CRUD
 - ✅ Weather API integration
+- ✅ Rate limiting
+- ✅ Security middleware
 - ⏳ Stripe payments
 
 ## Quick Start
@@ -358,6 +360,40 @@ golangci-lint run
 - Database schema is ready
 - Use the same database connection setup
 - Articles table structure is in `database/migrations/001_initial_schema.sql`
+
+## Rate Limiting
+
+The API implements Redis-based rate limiting to prevent abuse:
+
+- **Global Rate Limit**: 100 requests per minute per IP address
+- **Headers Returned**:
+  - `X-RateLimit-Limit`: Maximum requests allowed
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when limit resets
+  - `Retry-After`: Seconds to wait before retrying (when limited)
+
+When rate limit is exceeded, the API returns:
+- Status: `429 Too Many Requests`
+- Body: `{"error": "Rate limit exceeded. Please try again later."}`
+
+Rate limiting uses Redis for distributed tracking, so it works across multiple server instances.
+
+## Security Features
+
+The API includes multiple security middleware layers:
+
+- **Security Headers**:
+  - `X-Content-Type-Options: nosniff` - Prevent MIME sniffing
+  - `X-Frame-Options: DENY` - Prevent clickjacking
+  - `X-XSS-Protection: 1; mode=block` - XSS protection
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Content-Security-Policy: default-src 'self'`
+  - `Permissions-Policy` - Restrict browser features
+
+- **Panic Recovery**: Catches panics and returns 500 errors
+- **Request Timeouts**: 60-second timeout on all requests
+- **CORS**: Configurable cross-origin resource sharing
+- **JWT Authentication**: Secure token-based auth with 15-min expiry
 
 ## Environment Variables
 

@@ -809,8 +809,8 @@ jobs:
 - [x] Full classifieds CRUD
 - [x] Geographic search working (Haversine formula)
 - [x] Weather API integration (NOAA)
-- [ ] Rate limiting active
-- [ ] Security middleware complete
+- [x] Rate limiting active (100 req/min per IP, Redis-based)
+- [x] Security middleware complete (headers, panic recovery, CORS)
 
 ### Week 5-6 Goals
 - [ ] Stripe integration complete

@@ -47,6 +47,10 @@ func main() {
 	go wsHub.Run()
 	log.Println("✅ WebSocket hub running")
 
+	// Initialize rate limiter
+	rateLimiter := apimiddleware.NewRateLimiter(rdb, 100, 1*time.Minute)
+	log.Println("✅ Rate limiter initialized (100 req/min per IP)")
+
 	// Initialize services
 	authService := services.NewAuthService(db)
 	articleService := services.NewArticleService(db, rdb)
@@ -69,12 +73,17 @@ func main() {
 	// Setup router
 	r := chi.NewRouter()
 
-	// Middleware
+	// Security middleware
+	r.Use(apimiddleware.RecoverPanic)      // Recover from panics
+	r.Use(apimiddleware.SecurityHeaders)    // Security headers
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	// Rate limiting - already initialized above
+	r.Use(rateLimiter.Limit)
 
 	// CORS configuration
 	r.Use(cors.Handler(cors.Options{
