@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: terminalnews-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: terminalnews_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: terminalnews-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Server (Dev mode with hot reload)
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.api.dev
+    container_name: terminalnews-api-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - GO_ENV=development
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/terminalnews_dev?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - API_PORT=8080
+      - JWT_SECRET=dev_secret_change_in_production
+      - LOG_LEVEL=debug
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+      - go_modules:/go/pkg/mod
+    command: >
+      sh -c "
+        cd /app/backend &&
+        go mod download &&
+        go run cmd/api/main.go
+      "
+
+  # News Scraper (Dev mode)
+  scraper:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.scraper.dev
+    container_name: terminalnews-scraper-dev
+    restart: unless-stopped
+    environment:
+      - GO_ENV=development
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/terminalnews_dev?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - SCRAPE_INTERVAL=15m
+      - LOG_LEVEL=debug
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./scraper:/app/scraper
+      - ./shared:/app/shared
+      - go_modules:/go/pkg/mod
+    command: >
+      sh -c "
+        cd /app/scraper &&
+        go mod download &&
+        go run cmd/main.go
+      "
+
+  # PgAdmin (Optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: terminalnews-pgadmin-dev
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@terminalnews.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    depends_on:
+      - postgres
+    profiles:
+      - tools
+
+  # Redis Commander (Optional - for Redis management)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: terminalnews-redis-commander-dev
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  go_modules:
+    driver: local
+
+networks:
+  default:
+    name: terminalnews-dev-network
