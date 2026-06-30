@@ -1,185 +1,167 @@
-# Terminal News - Makefile
+# Terminal News - Project Makefile
+# Coordinates all three components: Backend, CLI, Scraper
 
-.PHONY: help build run test clean docker-up docker-down install dev fmt lint
+.PHONY: help install build test clean docker-up docker-down dev fmt
 
 # Default target
 help:
 	@echo "Terminal News - Available Commands"
 	@echo ""
-	@echo "Development:"
-	@echo "  make install    - Install dependencies"
-	@echo "  make dev        - Run in development mode"
-	@echo "  make build      - Build binaries"
-	@echo "  make run        - Run the client"
-	@echo "  make api        - Run the API server"
+	@echo "Quick Start:"
+	@echo "  make setup       - Install deps + start Docker + migrations"
+	@echo "  make dev         - Start all services in dev mode"
+	@echo ""
+	@echo "Build:"
+	@echo "  make install     - Download all Go dependencies"
+	@echo "  make build       - Build all binaries (backend, cli, scraper)"
+	@echo "  make build-backend  - Build backend only"
+	@echo "  make build-cli      - Build CLI only"
+	@echo "  make build-scraper  - Build scraper only"
+	@echo ""
+	@echo "Run:"
+	@echo "  make run-backend - Run API server"
+	@echo "  make run-cli     - Run terminal client"
+	@echo "  make run-scraper - Run news scraper"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test       - Run tests"
-	@echo "  make test-v     - Run tests (verbose)"
-	@echo "  make coverage   - Generate test coverage"
-	@echo ""
-	@echo "Code Quality:"
-	@echo "  make fmt        - Format code"
-	@echo "  make lint       - Run linters"
-	@echo "  make vet        - Run go vet"
+	@echo "  make test        - Run all tests"
+	@echo "  make test-scraper - Test scraper components"
 	@echo ""
 	@echo "Docker:"
-	@echo "  make docker-up  - Start Docker services"
+	@echo "  make docker-up   - Start all Docker services"
 	@echo "  make docker-down - Stop Docker services"
-	@echo "  make docker-logs - View Docker logs"
+	@echo "  make docker-logs - View logs"
 	@echo ""
 	@echo "Database:"
-	@echo "  make migrate-up   - Run database migrations"
-	@echo "  make migrate-down - Rollback migrations"
-	@echo "  make db-reset     - Reset database"
+	@echo "  make migrate-up  - Apply migrations"
+	@echo "  make db-reset    - Reset database"
 	@echo ""
 	@echo "Utilities:"
-	@echo "  make clean      - Clean build artifacts"
-	@echo "  make deps       - Update dependencies"
+	@echo "  make clean       - Clean all build artifacts"
+	@echo "  make fmt         - Format all code"
 
-# Install dependencies
+# Install all dependencies
 install:
-	@echo "Installing dependencies..."
-	go mod download
-	go mod verify
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@echo "Installing Backend dependencies..."
+	cd backend && go mod download
+	@echo "Installing CLI dependencies..."
+	cd cli && go mod download
+	@echo "Installing Scraper dependencies..."
+	cd scraper && go mod download
+	@echo "✅ All dependencies installed"
 
-# Development mode (with auto-reload)
-dev:
-	@echo "Starting development mode..."
-	go run cmd/terminal-news/main.go
+# Build all components
+build: build-backend build-cli build-scraper
 
-# Build binaries
-build:
-	@echo "Building binaries..."
-	mkdir -p bin
-	go build -o bin/terminal-news cmd/terminal-news/main.go
-	go build -o bin/api cmd/api/main.go
-	go build -o bin/worker cmd/worker/main.go
-	@echo "Binaries built in ./bin/"
+build-backend:
+	@echo "Building Backend..."
+	cd backend && mkdir -p bin && go build -o bin/backend.exe cmd/server/main.go
+	@echo "✅ Backend built: backend/bin/backend.exe"
 
-# Build for all platforms
-build-all:
-	@echo "Building for all platforms..."
-	mkdir -p bin
-	GOOS=darwin GOARCH=amd64 go build -o bin/terminal-news-darwin-amd64 cmd/terminal-news/main.go
-	GOOS=darwin GOARCH=arm64 go build -o bin/terminal-news-darwin-arm64 cmd/terminal-news/main.go
-	GOOS=linux GOARCH=amd64 go build -o bin/terminal-news-linux-amd64 cmd/terminal-news/main.go
-	GOOS=linux GOARCH=arm64 go build -o bin/terminal-news-linux-arm64 cmd/terminal-news/main.go
-	GOOS=windows GOARCH=amd64 go build -o bin/terminal-news-windows-amd64.exe cmd/terminal-news/main.go
-	@echo "Cross-platform binaries built!"
+build-cli:
+	@echo "Building CLI..."
+	cd cli && mkdir -p bin && go build -o bin/terminal-news.exe cmd/terminal-news/main.go
+	@echo "✅ CLI built: cli/bin/terminal-news.exe"
 
-# Run the terminal client
-run: build
-	@echo "Running Terminal News..."
-	./bin/terminal-news
+build-scraper:
+	@echo "Building Scraper..."
+	cd scraper && mkdir -p bin && go build -o bin/scraper.exe cmd/scraper/main.go
+	@echo "✅ Scraper built: scraper/bin/scraper.exe"
 
-# Run API server
-api:
-	@echo "Starting API server..."
-	go run cmd/api/main.go
+# Run components
+run-backend: build-backend
+	@echo "Starting Backend API..."
+	cd backend && ./bin/backend.exe
 
-# Run worker
-worker:
-	@echo "Starting news aggregation worker..."
-	go run cmd/worker/main.go
+run-cli: build-cli
+	@echo "Starting CLI..."
+	cd cli && ./bin/terminal-news.exe
 
-# Tests
+run-scraper: build-scraper
+	@echo "Starting Scraper..."
+	cd scraper && ./bin/scraper.exe
+
+# Testing
 test:
-	@echo "Running tests..."
-	go test ./...
+	@echo "Running Backend tests..."
+	cd backend && go test ./...
+	@echo "Running CLI tests..."
+	cd cli && go test ./...
+	@echo "Running Scraper tests..."
+	cd scraper && go test ./...
 
-test-v:
-	@echo "Running tests (verbose)..."
-	go test -v ./...
-
-coverage:
-	@echo "Generating test coverage..."
-	go test -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report: coverage.html"
-
-# Code quality
-fmt:
-	@echo "Formatting code..."
-	go fmt ./...
-
-lint:
-	@echo "Running linters..."
-	golangci-lint run
-
-vet:
-	@echo "Running go vet..."
-	go vet ./...
+test-scraper:
+	@echo "Testing Scraper components..."
+	cd scraper && go run cmd/test/main.go
+	@echo ""
+	cd scraper && go run cmd/test-dedup/main.go
+	@echo ""
+	cd scraper && go run cmd/test-classifier/main.go
 
 # Docker commands
 docker-up:
 	@echo "Starting Docker services..."
-	docker-compose up -d
+	docker-compose -f docker-compose.dev.yml up -d
+	@echo "✅ Docker services started"
 
 docker-down:
 	@echo "Stopping Docker services..."
-	docker-compose down
+	docker-compose -f docker-compose.dev.yml down
 
 docker-logs:
-	docker-compose logs -f
+	docker-compose -f docker-compose.dev.yml logs -f
 
-docker-build:
-	@echo "Building Docker images..."
-	docker-compose build
+docker-restart:
+	@echo "Restarting Docker services..."
+	docker-compose -f docker-compose.dev.yml restart
 
-docker-reset:
-	@echo "Resetting Docker environment..."
-	docker-compose down -v
-	docker-compose up -d
-
-# Database migrations
+# Database
 migrate-up:
-	@echo "Running database migrations..."
-	go run cmd/migrate/main.go up
-
-migrate-down:
-	@echo "Rolling back database migrations..."
-	go run cmd/migrate/main.go down
-
-migrate-create:
-	@echo "Creating new migration..."
-	@read -p "Migration name: " name; \
-	go run cmd/migrate/main.go create $$name
+	@echo "Applying database migrations..."
+	@echo "⚠️  Migrations need to be applied manually for now"
+	@echo "Run: psql $$DATABASE_URL < database/migrations/001_initial_schema.sql"
+	@echo "Run: psql $$DATABASE_URL < database/migrations/002_triggers_and_functions.sql"
 
 db-reset:
 	@echo "Resetting database..."
-	docker-compose down -v db
-	docker-compose up -d db
-	sleep 5
-	make migrate-up
-	@echo "Database reset complete!"
+	docker-compose -f docker-compose.dev.yml down -v postgres
+	docker-compose -f docker-compose.dev.yml up -d postgres
+	@echo "Waiting for postgres..."
+	@timeout 10
+	@echo "Apply migrations with: make migrate-up"
 
-# Clean build artifacts
+# Development mode
+dev: docker-up
+	@echo "Starting development environment..."
+	@echo "Backend will be available at http://localhost:8080"
+	@echo "Run in separate terminals:"
+	@echo "  make run-backend"
+	@echo "  make run-scraper"
+	@echo "  make run-cli"
+
+# Code quality
+fmt:
+	@echo "Formatting code..."
+	cd backend && go fmt ./...
+	cd cli && go fmt ./...
+	cd scraper && go fmt ./...
+	@echo "✅ Code formatted"
+
+# Clean artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -rf bin/
-	rm -rf dist/
-	rm -f coverage.out coverage.html
-	go clean
+	rm -rf backend/bin
+	rm -rf cli/bin
+	rm -rf scraper/bin
+	@echo "✅ Clean complete"
 
-# Update dependencies
-deps:
-	@echo "Updating dependencies..."
-	go get -u ./...
-	go mod tidy
-
-# Create release
-release:
-	@echo "Creating release..."
-	@read -p "Version (e.g., v1.0.0): " version; \
-	git tag -a $$version -m "Release $$version"; \
-	git push origin $$version
-	@echo "Release tagged. CI will build and publish."
-
-# Quick start for new developers
-setup: install docker-up migrate-up
+# Quick setup for new developers
+setup: install docker-up
 	@echo ""
-	@echo "Setup complete! You can now run:"
-	@echo "  make dev    - to start the client"
-	@echo "  make api    - to start the API server"
+	@echo "✅ Setup complete!"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Apply migrations: make migrate-up"
+	@echo "  2. Start backend: make run-backend"
+	@echo "  3. Start scraper: make run-scraper"
+	@echo "  4. Start CLI: make run-cli"

@@ -80,3 +80,4 @@ yarn-error.log
 # Backup files
 *.bak
 *.backup
+backend/backend.tar.gz

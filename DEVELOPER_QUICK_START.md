@@ -7,22 +7,39 @@
 ## For the Impatient
 
 ```bash
-# 1. Clone and setup
+# 1. Install Go 1.21+ from https://go.dev/dl/
+
+# 2. Clone and setup
 git clone <your-repo-url> terminal-news
 cd terminal-news
-./scripts/dev-setup.sh
 
-# 2. Add API keys to .env
-nano .env  # Add NEWS_API_KEY, GUARDIAN_API_KEY
+# 3. Install all dependencies
+make install
 
-# 3. Start everything
-docker-compose -f docker-compose.dev.yml up
+# 4. Start Docker services (PostgreSQL + Redis)
+make docker-up
 
-# 4. In another terminal, run CLI
-cd cli && go run cmd/main.go
+# 5. Apply database migrations
+./scripts/migrate.sh up
+
+# 6. Build all components
+make build
+
+# 7. Run each component in separate terminals:
+make run-backend   # Terminal 1: API server on :8080
+make run-scraper   # Terminal 2: News scraper
+make run-cli       # Terminal 3: Terminal client
 ```
 
 **Done!** You're now running Terminal News locally.
+
+## Even Faster (Test Without Database)
+
+```bash
+cd scraper
+go run cmd/test/main.go          # Fetches 100+ real articles
+go run cmd/test-classifier/main.go  # Tests categorization
+```
 
 ---
 

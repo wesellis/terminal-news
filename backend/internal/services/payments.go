@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -186,7 +185,7 @@ func (s *PaymentService) CreateSponsorSubscription(ctx context.Context, userID i
 
 	// Get user info
 	var email, username string
-	err = s.db.GetContext(ctx, &email, `SELECT email FROM users WHERE id = $1`, userID)
+	err := s.db.GetContext(ctx, &email, `SELECT email FROM users WHERE id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}

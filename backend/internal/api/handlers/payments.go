@@ -176,7 +176,7 @@ func (h *Handler) HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		// Unexpected event type
-		h.respondError(w, r, http.StatusBadRequest, "Unhandled event type: "+event.Type)
+		h.respondError(w, r, http.StatusBadRequest, "Unhandled event type: "+string(event.Type))
 		return
 	}
 
