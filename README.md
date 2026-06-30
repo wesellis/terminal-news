@@ -82,15 +82,20 @@ See `/docs` folder for detailed design documents.
 
 ## Getting Started
 
-*Coming soon - MVP in development*
+```bash
+git clone https://github.com/wesellis/terminal-news.git
+cd terminal-news
+```
+
+See [SETUP.md](SETUP.md) for full installation instructions.
 
 ## Contributing
 
-*Contribution guidelines coming soon*
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-*TBD*
+MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
