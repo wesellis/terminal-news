@@ -81,3 +81,21 @@ yarn-error.log
 *.bak
 *.backup
 backend/backend.tar.gz
+
+# Internal planning/status docs
+DEPLOYMENT.md
+DEV3_DEPLOYMENT_READY.md
+DEV3_FINAL_REPORT.md
+DIGITAL_OCEAN_CHECKLIST.md
+INTEGRATION_STATUS.md
+PROJECT_STATUS.md
+PROJECT_SUMMARY.md
+START_HERE.md
+dev-guides/
+docs/AUTOMATED_REVENUE_SYSTEMS.md
+docs/AUTOMATION_STRATEGY.md
+docs/BUSINESS_MODEL.md
+docs/FULL_TIME_VIABILITY.md
+docs/MOBILE_STRATEGY.md
+docs/MOBILE_STRATEGY.md
+test-api.bat
