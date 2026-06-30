@@ -140,7 +140,7 @@ func (w *WeatherClient) getCurrentConditions(stationURL string) (*CurrentConditi
 		} `json:"features"`
 	}
 
-	resp, err := w.client.R().
+	_, err := w.client.R().
 		SetResult(&stations).
 		Get(stationURL)
 
@@ -156,7 +156,7 @@ func (w *WeatherClient) getCurrentConditions(stationURL string) (*CurrentConditi
 	stationID := stations.Features[0].Properties.StationIdentifier
 
 	var conditions CurrentConditions
-	resp, err = w.client.R().
+	_, err = w.client.R().
 		SetResult(&conditions).
 		Get(fmt.Sprintf("/stations/%s/observations/latest", stationID))
 
@@ -171,7 +171,7 @@ func (w *WeatherClient) getForecast(forecastURL string) (*NOAAForecast, error) {
 	var forecast NOAAForecast
 
 	// Use full URL as it's provided by the API
-	resp, err := w.client.SetBaseURL("").R().
+	_, err := w.client.SetBaseURL("").R().
 		SetResult(&forecast).
 		Get(forecastURL)
 
